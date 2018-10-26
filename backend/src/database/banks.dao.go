@@ -10,7 +10,7 @@ import (
 )
 
 func (connection *Connection) InsertBank(bank *datamodels.Bank) error {
-	existingBank, selectionError := connection.GetBankByCountryCodeAndBIC(bank.CountryCode, bank.BIC)
+	existingBank, selectionError := connection.GetBankByBIC(bank.BIC)
 
 	if selectionError != nil {
 		log.Fatal(selectionError.Error())
@@ -24,8 +24,14 @@ func (connection *Connection) InsertBank(bank *datamodels.Bank) error {
 	return err
 }
 
-func (connection *Connection) GetBankByCountryCodeAndBIC(countryCode string, bic uint16) (*datamodels.Bank, error) {
+func (connection *Connection) GetBankByCountryCodeAndBIC(countryCode string, bic string) (*datamodels.Bank, error) {
 	var bank *datamodels.Bank
 	err := database.C(BanksCollection).Find(bson.M{"countryCode": countryCode, "bic": bic}).One(&bank)
+	return bank, err
+}
+
+func (connection *Connection) GetBankByBIC(bic string) (*datamodels.Bank, error) {
+	var bank *datamodels.Bank
+	err := database.C(BanksCollection).Find(bson.M{"bic": bic}).One(&bank)
 	return bank, err
 }

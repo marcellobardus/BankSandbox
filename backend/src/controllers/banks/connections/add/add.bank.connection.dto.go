@@ -1,1 +1,4 @@
-package banks
+package add
+
+type AddBankConnectionDto struct {
+}

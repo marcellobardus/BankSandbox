@@ -17,7 +17,7 @@ type Session struct {
 func NewSession(expirationAfterMinutes uint16) *Session {
 	// Initialize session
 	session := new(Session)
-	session.SetNewToken()
+	session.setNewToken()
 	session.CreationTime = time.Now()
 	session.ExpirationTime = time.Now().Add(time.Minute * time.Duration(expirationAfterMinutes))
 	return session
@@ -27,7 +27,7 @@ func (session *Session) IsSessionValid() bool {
 	return session.ExpirationTime.Unix() <= time.Now().Unix()
 }
 
-func (session *Session) SetNewToken() {
+func (session *Session) setNewToken() {
 	randomString := uniuri.New()
 	sha256Hash := sha256.Sum256([]byte(randomString))
 	session.Token = hex.EncodeToString(sha256Hash[:])

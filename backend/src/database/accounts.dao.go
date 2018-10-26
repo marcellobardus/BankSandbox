@@ -29,3 +29,15 @@ func (connection *Connection) GetAccountBySocialInsuranceID(id string) (*datamod
 	err := database.C(AccountsCollection).Find(bson.M{"socialInsuranceID": id}).One(&account)
 	return account, err
 }
+
+func (connection *Connection) GetAccountBySessionToken(sessionToken string) (*datamodels.Account, error) {
+	var account *datamodels.Account
+	err := database.C(AccountsCollection).Find(bson.M{"session.token": sessionToken}).One(&account)
+	return account, err
+}
+
+func (connection *Connection) GetAccountByLoginID(loginID uint32) (*datamodels.Account, error) {
+	var account *datamodels.Account
+	err := database.C(AccountsCollection).Find(bson.M{"loginID": loginID}).One(&account)
+	return account, err
+}
