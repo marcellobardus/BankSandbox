@@ -16,7 +16,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	// Identify bank
 
-	privateKey := w.Header().Get("privateKey")
+	privateKey := req.Header.Get("privateKey")
 
 	bank, err := database.DbConnection.GetBankByPrivateKey(privateKey)
 
@@ -119,16 +119,6 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	err = bank.DeleteDeliveredConnectionRequest(senderBank.BIC)
-
-	if err != nil {
-		code := 509
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
-		resJSON, _ := json.Marshal(res)
-		w.Write(resJSON)
-		return
-	}
-
 	err = senderBank.DeleteSentConnectionRequest(bank.BIC)
 
 	if err != nil {
@@ -148,6 +138,8 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 		w.Write(resJSON)
 		return
 	}
+
+	senderBank.Connections = append(senderBank.Connections, bank.BIC)
 
 	err = database.DbConnection.UpdateBankByBIC(senderBank.BIC, senderBank)
 

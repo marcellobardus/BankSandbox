@@ -12,7 +12,7 @@ import (
 func (connection *Connection) InsertBank(bank *datamodels.Bank) error {
 	existingBank, selectionError := connection.GetBankByBIC(bank.BIC)
 
-	if selectionError != nil {
+	if selectionError != nil && selectionError.Error() != "not found" {
 		log.Fatal(selectionError.Error())
 	}
 

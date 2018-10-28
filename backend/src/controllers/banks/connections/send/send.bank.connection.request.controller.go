@@ -40,7 +40,8 @@ func sendBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	// Authorize the sender
 
-	privateKey := w.Header().Get("privateKey")
+	privateKey := req.Header.Get("privateKey")
+
 	if privateKey != sendingBank.PrivateKey {
 		code := 403
 		res := NewSendBankConnectionRequestDrt(true, &code)

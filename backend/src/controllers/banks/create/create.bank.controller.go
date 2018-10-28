@@ -1,6 +1,7 @@
 package create
 
 import (
+	"encoding/base32"
 	"encoding/json"
 	"net/http"
 
@@ -32,7 +33,7 @@ func createBank(w http.ResponseWriter, req *http.Request) {
 
 	for i := 0; i < int(createBankDto.OwnersNumber); i++ {
 		ownerProfile := dgoogauth.OTPConfig{
-			Secret:     utils.NewRandomSha512(),
+			Secret:     base32.StdEncoding.EncodeToString([]byte(utils.NewRandomSha512())),
 			WindowSize: 3, HotpCounter: 0}
 		ownersProfiles = append(ownersProfiles, &ownerProfile)
 	}
