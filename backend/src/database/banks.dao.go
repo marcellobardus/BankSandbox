@@ -35,3 +35,16 @@ func (connection *Connection) GetBankByBIC(bic string) (*datamodels.Bank, error)
 	err := database.C(BanksCollection).Find(bson.M{"bic": bic}).One(&bank)
 	return bank, err
 }
+
+func (connection *Connection) GetBankByPrivateKey(privateKey string) (*datamodels.Bank, error) {
+	var bank *datamodels.Bank
+	err := database.C(BanksCollection).Find(bson.M{"privateKey": privateKey}).One(&bank)
+	return bank, err
+}
+
+func (connection *Connection) UpdateBankByBIC(bic string, bank *datamodels.Bank) error {
+	err := database.C(BanksCollection).Update(bson.M{"bic": bic}, bank)
+	return err
+}
+
+// TODO update bank

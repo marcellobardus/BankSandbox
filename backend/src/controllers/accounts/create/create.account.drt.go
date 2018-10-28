@@ -18,6 +18,11 @@ func newCreateAccountDrt(err bool,
 	drt.SessionToken = sessionToken
 	drt.OTPSecret = otpSecret
 	drt.LoginID = loginID
-	drt.ErrorCode = errorCode
+	if errorCode != nil {
+		code := *errorCode + 1000
+		drt.ErrorCode = &code
+	} else {
+		drt.ErrorCode = errorCode
+	}
 	return drt
 }

@@ -27,5 +27,11 @@ func NewAppController() http.Handler {
 	router.HandleFunc(
 		banks.CreateBankController.Path,
 		banks.CreateBankController.HandlerFunc).Methods(banks.CreateBankController.Method)
+	router.HandleFunc(
+		banks.SendBankConnectionRequestController.Path,
+		banks.SendBankConnectionRequestController.HandlerFunc).Methods(banks.SendBankConnectionRequestController.Method)
+	router.HandleFunc(
+		banks.AnswerBankConnectionRequestController.Path,
+		banks.AnswerBankConnectionRequestController.HandlerFunc).Methods(banks.AnswerBankConnectionRequestController.Method)
 	return router
 }

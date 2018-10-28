@@ -9,7 +9,12 @@ type LoginAccountDrt struct {
 func newLoginAccountDrt(err bool, errorCode *int, sessionToken *string) *LoginAccountDrt {
 	drt := new(LoginAccountDrt)
 	drt.Error = err
-	drt.ErrorCode = errorCode
 	drt.SessionToken = sessionToken
+	if errorCode != nil {
+		code := *errorCode + 1000
+		drt.ErrorCode = &code
+	} else {
+		drt.ErrorCode = errorCode
+	}
 	return drt
 }

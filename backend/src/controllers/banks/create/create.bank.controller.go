@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/dgryski/dgoogauth"
 	"github.com/spaghettiCoderIT/BankSandbox/backend/src/database"
 
 	"github.com/spaghettiCoderIT/BankSandbox/backend/src/datamodels"
@@ -19,7 +20,7 @@ func createBank(w http.ResponseWriter, req *http.Request) {
 
 	if err := json.NewDecoder(req.Body).Decode(&createBankDto); err != nil {
 		code := 301
-		res := newCreateBankDrt(true, &code, nil)
+		res := newCreateBankDrt(true, &code, nil, nil)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
@@ -27,18 +28,33 @@ func createBank(w http.ResponseWriter, req *http.Request) {
 
 	privateKey := utils.NewRandomSha512()
 
-	bank := datamodels.NewBank(createBankDto.Name, createBankDto.CountryCode, createBankDto.BIC, privateKey)
+	var ownersProfiles = make([]*dgoogauth.OTPConfig, 0)
+
+	for i := 0; i < int(createBankDto.OwnersNumber); i++ {
+		ownerProfile := dgoogauth.OTPConfig{
+			Secret:     utils.NewRandomSha512(),
+			WindowSize: 3, HotpCounter: 0}
+		ownersProfiles = append(ownersProfiles, &ownerProfile)
+	}
+
+	bank := datamodels.NewBank(createBankDto.Name, createBankDto.CountryCode, createBankDto.BIC, privateKey, ownersProfiles)
 
 	if err := database.DbConnection.InsertBank(bank); err != nil {
 		code := 302
-		res := newCreateBankDrt(true, &code, nil)
+		res := newCreateBankDrt(true, &code, nil, nil)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
 	}
 
+	var ownersProfilesSecrets = make([]string, 0)
+
+	for i := 0; i < len(ownersProfiles); i++ {
+		ownersProfilesSecrets = append(ownersProfilesSecrets, ownersProfiles[i].Secret)
+	}
+
 	message := "Because of security reasons the private key will not be delivired over the http/https protocol, please contact us"
-	res := newCreateBankDrt(false, nil, &message)
+	res := newCreateBankDrt(false, nil, &message, &ownersProfilesSecrets)
 	resJSON, _ := json.Marshal(res)
 	w.Write(resJSON)
 	return
