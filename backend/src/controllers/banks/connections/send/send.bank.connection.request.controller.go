@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/spaghettiCoderIT/BankSandbox/backend/src/datamodels"
 
@@ -80,7 +81,21 @@ func sendBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	// create a connection request
 
-	request := datamodels.NewBankConnectionRequest(sendingBank.BIC, recipientBank.BIC)
+	var transferTimeUnit time.Duration
+
+	if sendBankConnectionRequestDto.TransferTimeUnit == "minutes" {
+		transferTimeUnit = time.Minute
+	} else if sendBankConnectionRequestDto.TransferTimeUnit == "hours" {
+		transferTimeUnit = time.Hour
+	} else {
+		code := 409
+		res := NewSendBankConnectionRequestDrt(true, &code)
+		resJSON, _ := json.Marshal(res)
+		w.Write(resJSON)
+		return
+	}
+
+	request := datamodels.NewBankConnectionRequest(sendingBank.BIC, recipientBank.BIC, sendBankConnectionRequestDto.TransferTime, transferTimeUnit)
 
 	// update banks requests
 

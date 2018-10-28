@@ -21,15 +21,20 @@ type BankConnectionRequest struct {
 	OutcomeDate     time.Time `json:"outcomeDate" bson:"outcomeDate"`
 	AcceptationDate time.Time `json:"acceptationDate" bson:"acceptationDate"`
 
+	TransferTime     time.Duration `json:"transferTime" bson:"transferTime"`
+	TransferTimeUnit interface{}   `json:"transferTimeUnit" bson:"transferTimeUnit"`
+
 	Status BankConnectionRequestStatus `json:"status" bson:"status"`
 }
 
-func NewBankConnectionRequest(sender string, recipient string) *BankConnectionRequest {
+func NewBankConnectionRequest(sender string, recipient string, transferTime uint32, transferTimeUnit interface{}) *BankConnectionRequest {
 	request := new(BankConnectionRequest)
 	request.Sender = sender
 	request.Recipient = recipient
 	request.OutcomeDate = time.Now()
 	request.Status = Pending
+	request.TransferTime = time.Duration(transferTime)
+	request.TransferTimeUnit = transferTimeUnit
 	return request
 }
 

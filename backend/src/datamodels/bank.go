@@ -2,6 +2,7 @@ package datamodels
 
 import (
 	"errors"
+	"time"
 
 	"github.com/dgryski/dgoogauth"
 )
@@ -11,7 +12,7 @@ type Bank struct {
 	Name                        string                   `json:"name" bson:"name"`
 	CountryCode                 string                   `json:"countryCode" bson:"countryCode"`
 	BIC                         string                   `json:"bic" bson:"bic"`
-	Connections                 []string                 `json:"connections" bson:"connections"`
+	Connections                 []*BankConnection        `json:"connections" bson:"connections"`
 	Customers                   []*Account               `json:"customers" bson:"customers"`
 	PrivateKey                  string                   `json:"privateKey" bson:"privateKey"`
 	OwnersProfiles              []*dgoogauth.OTPConfig   `json:"ownersProfiles" bson:"ownersProfiles"`
@@ -24,7 +25,7 @@ func NewBank(name string, countryCode string, bic string, privateKey string, own
 	bank := new(Bank)
 	bank.CountryCode = countryCode
 	bank.BIC = bic
-	bank.Connections = make([]string, 0)
+	bank.Connections = make([]*BankConnection, 0)
 	bank.Customers = make([]*Account, 0)
 	bank.OwnersProfiles = make([]*dgoogauth.OTPConfig, 0)
 	bank.PrivateKey = privateKey
@@ -32,8 +33,8 @@ func NewBank(name string, countryCode string, bic string, privateKey string, own
 	return bank
 }
 
-func (sender *Bank) SendConnectionRequest(recipient *Bank) {
-	request := NewBankConnectionRequest(sender.BIC, recipient.BIC)
+func (sender *Bank) SendConnectionRequest(recipient *Bank, transferTime uint32, transferTimeUnit interface{}) {
+	request := NewBankConnectionRequest(sender.BIC, recipient.BIC, transferTime, transferTimeUnit)
 	sender.OutcomingConnectionRequests = append(sender.OutcomingConnectionRequests, request)
 	recipient.IncomingConnectionRequests = append(recipient.IncomingConnectionRequests, request)
 }
@@ -64,11 +65,12 @@ func (recipient *Bank) DeleteDeliveredConnectionRequest(sender string) error {
 	return errors.New("Wrong sender argument")
 }
 
-func (recipient *Bank) AcceptConnectionRequest(sender string) error {
+func (recipient *Bank) AcceptConnectionRequest(sender string, transferTime uint32, timeUnit interface{}) error {
 	for i := 0; i < len(recipient.IncomingConnectionRequests); i++ {
 		if recipient.IncomingConnectionRequests[i].Sender == sender {
 			recipient.IncomingConnectionRequests[i].Accept()
-			recipient.Connections = append(recipient.Connections, sender)
+			newConnection := NewBankConnection(sender, time.Duration(transferTime), timeUnit)
+			recipient.Connections = append(recipient.Connections, newConnection)
 
 			// Delete request
 

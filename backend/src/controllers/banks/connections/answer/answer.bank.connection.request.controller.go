@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/spaghettiCoderIT/BankSandbox/backend/src/datamodels"
+
 	"github.com/spaghettiCoderIT/BankSandbox/backend/src/database"
 
 	"github.com/spaghettiCoderIT/BankSandbox/backend/src/utils"
@@ -72,9 +74,11 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 	}
 
 	isBankAuthorizedToAcceptRequest := false
+	var connection *datamodels.BankConnection
 
 	for i := 0; i < len(bank.IncomingConnectionRequests); i++ {
 		if answerBankConnectionRequestDto.SenderBIC == bank.IncomingConnectionRequests[i].Sender {
+			connection = datamodels.NewBankConnection(bank.BIC, bank.IncomingConnectionRequests[i].TransferTime, bank.IncomingConnectionRequests[i].TransferTimeUnit)
 			isBankAuthorizedToAcceptRequest = true
 			break
 		}
@@ -100,7 +104,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if answerBankConnectionRequestDto.Accept {
-		err := bank.AcceptConnectionRequest(senderBank.BIC)
+		err := bank.AcceptConnectionRequest(senderBank.BIC, uint32(connection.TransferTime), connection.TransferTimeUnit)
 		if err != nil {
 			code := 508
 			res := NewAnswerBankConnectionRequestDrt(true, &code, false)
@@ -139,7 +143,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	senderBank.Connections = append(senderBank.Connections, bank.BIC)
+	senderBank.Connections = append(senderBank.Connections, connection)
 
 	err = database.DbConnection.UpdateBankByBIC(senderBank.BIC, senderBank)
 
