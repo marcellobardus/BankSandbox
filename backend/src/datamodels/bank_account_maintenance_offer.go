@@ -49,12 +49,25 @@ func (offer *BankAccountMaintenanceOffer) CancelOffer(recipientAccount *Account)
 	return errors.New("offer not found")
 }
 
-// TODO
 func (offer *BankAccountMaintenanceOffer) Accept(account *Account) error {
-	return nil
+	for i := 0; i < len(account.AccountMaintenanceOffers); i++ {
+		if account.AccountMaintenanceOffers[i].SendingBankBIC == offer.SendingBankBIC {
+			account.SetMaintingBank(offer.SendingBankBIC)
+			return nil
+		}
+	}
+	return errors.New("offer not found")
 }
 
-// TODO
 func (offer *BankAccountMaintenanceOffer) Refuse(account *Account) error {
-	return nil
+	for i := 0; i < len(account.AccountMaintenanceOffers); i++ {
+		if account.AccountMaintenanceOffers[i].SendingBankBIC == offer.SendingBankBIC {
+			arraySize := len(account.AccountMaintenanceOffers)
+			account.AccountMaintenanceOffers[i] = account.AccountMaintenanceOffers[arraySize-1]
+			account.AccountMaintenanceOffers[arraySize-1] = nil
+			account.AccountMaintenanceOffers = account.AccountMaintenanceOffers[:arraySize-1]
+			return nil
+		}
+	}
+	return errors.New("offer not found")
 }
