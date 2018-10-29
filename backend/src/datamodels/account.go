@@ -3,9 +3,13 @@ package datamodels
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
+	"hash/adler32"
 	"math/rand"
 	"strconv"
 	"time"
+
+	"github.com/spaghettiCoderIT/BankSandbox/backend/src/utils"
 
 	"github.com/dgryski/dgoogauth"
 )
@@ -25,7 +29,11 @@ type Account struct {
 
 	RegistrationDate time.Time `bson:"registrationDate" json:"registrationDate"`
 
-	Wallets map[string]*Wallet
+	Wallets []*Wallet `bson:"wallets" json:"wallets"`
+
+	AccountMaintenanceOffers []*BankAccountMaintenanceOffer `bson:"accountMaintenanceOffers" json:"accountMaintenanceOffers"`
+
+	MaintingBankBIC string `bson:"maintingBankBIC" json:"maintingBankBIC"`
 }
 
 // NewAccount return a new account
@@ -41,6 +49,10 @@ func NewAccount(name string, surname string, mail string, phonenumber string, so
 	account.Session = NewSession(30)
 	account.PasswordHash = passwordHash
 
+	account.Wallets = make([]*Wallet, 0)
+
+	account.AccountMaintenanceOffers = make([]*BankAccountMaintenanceOffer, 0)
+
 	return account
 }
 
@@ -54,4 +66,47 @@ func (account *Account) SetOPT() {
 		WindowSize:  3,
 		HotpCounter: 0,
 	}
+}
+
+func (account *Account) SetLoginID() error {
+	if account.LoginID != 0 {
+		return errors.New("Account's LoginID is already set")
+	}
+
+	randomSha521 := utils.NewRandomSha512()
+	concatenatedString := utils.ConcatenateStrings(randomSha521, account.MaintingBankBIC, account.SocialInsuranceID)
+	md5Hash := md5.Sum([]byte(concatenatedString))
+	md5HashToString := hex.EncodeToString(md5Hash[:])
+	adler32Hash := adler32.Checksum([]byte(md5HashToString))
+	account.LoginID = adler32Hash
+
+	return nil
+}
+
+func (account *Account) AppendWallet(wallet *Wallet) error {
+	for i := 0; i < len(account.Wallets); i++ {
+		if account.Wallets[i].Currency == wallet.Currency {
+			return errors.New("Wallet with the given currency already exists")
+		}
+	}
+	account.Wallets = append(account.Wallets, wallet)
+	return nil
+}
+
+func (account *Account) DeleteWallet(currency string) error {
+	for i := 0; i < len(account.Wallets); i++ {
+		if account.Wallets[i].Currency == currency {
+			arraySize := len(account.Wallets)
+			account.Wallets[i] = account.Wallets[arraySize-1]
+			account.Wallets[arraySize-1] = nil
+			account.Wallets = account.Wallets[:arraySize-1]
+			return nil
+		}
+	}
+	return errors.New("Wallet with the given could not be deleted because it does not exist")
+}
+
+// TODO
+func (account *Account) SetMaintingBank(bankBic string) error {
+	return nil
 }
