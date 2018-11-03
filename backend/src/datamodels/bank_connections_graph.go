@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/RyanCarrier/dijkstra"
 	"github.com/spaghettiCoderIT/BankSandbox/backend/src/utils"
 )
 
@@ -28,7 +29,7 @@ type dijkstraBy string
 const (
 	Time     dijkstraBy = "time"
 	Fees     dijkstraBy = "fees"
-	distance dijkstraBy = "distance"
+	Distance dijkstraBy = "distance"
 )
 
 type BankConnectionsGraph struct {
@@ -65,21 +66,37 @@ func (graph *BankConnectionsGraph) CreateNewRoute(route *BankConnectionRoute) er
 }
 
 // TODO
-func (graph *BankConnectionsGraph) FindShortestRoute(from string, to string) ([]string, error) {
+func (graph *BankConnectionsGraph) FindRoute(from string, to string) ([]string, error) {
 	return []string{}, nil
 }
 
 // TODO
-func (graph *BankConnectionsGraph) FindCheapestRoute(from string, to string) ([]string, error) {
-	return []string{}, nil
-}
+func dijkstraAlgorithm(targetGraph *BankConnectionsGraph, from string, to string, costType dijkstraBy) []string {
+	var vertexs map[string]int
 
-// TODO
-func (graph *BankConnectionsGraph) FindFastesRoute(from string, to string) ([]string, error) {
-	return []string{}, nil
-}
+	// Set new graph
 
-// TODO
-func dijkstra(graph *BankConnectionsGraph, from string, to string, costType dijkstraBy) []string {
-	return []string{}
+	graph := dijkstra.NewGraph()
+	for i := 0; i < len(targetGraph.BanksBICs); i++ {
+		vertexs[targetGraph.BanksBICs[i]] = i
+		graph.AddVertex(i)
+	}
+
+	for i := 0; i < len(targetGraph.Routes); i++ {
+		graph.AddArc(vertexs[targetGraph.Routes[i].FromBIC], vertexs[targetGraph.Routes[i].ToBIC], 1)
+	}
+
+	path, _ := graph.Shortest(vertexs[from], vertexs[to])
+
+	intRoutes := path.Path
+
+	result := make([]string, 0)
+
+	revertedVertexes := utils.ReverseMap(vertexs)
+
+	for i := 0; i < len(intRoutes); i++ {
+		result = append(result, revertedVertexes[intRoutes[i]])
+	}
+
+	return result
 }
