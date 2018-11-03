@@ -1,7 +1,9 @@
-package utils
+package visualisations
 
 import (
 	"math"
+
+	"github.com/spaghettiCoderIT/BankSandbox/backend/src/datamodels"
 
 	"gopkg.in/fogleman/gg.v1"
 )
@@ -12,7 +14,8 @@ type bank struct {
 	y           float64
 }
 
-func GetGraphVisulisation(width uint16, height uint16) {
+// TODO
+func GetGraphVisulisation(width uint16, height uint16, graph *datamodels.BankConnectionsGraph) {
 
 	var banks = []bank{
 		bank{connections: []int{1, 2}},
