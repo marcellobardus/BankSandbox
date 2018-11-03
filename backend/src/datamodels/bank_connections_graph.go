@@ -65,13 +65,12 @@ func (graph *BankConnectionsGraph) CreateNewRoute(route *BankConnectionRoute) er
 	return nil
 }
 
-// TODO
+// TODO error handlin
 func (graph *BankConnectionsGraph) FindRoute(from string, to string) ([]string, error) {
-	return []string{}, nil
+	return dijkstraAlgorithm(graph, from, to), nil
 }
 
-// TODO
-func dijkstraAlgorithm(targetGraph *BankConnectionsGraph, from string, to string, costType dijkstraBy) []string {
+func dijkstraAlgorithm(targetGraph *BankConnectionsGraph, from string, to string) []string {
 	var vertexs map[string]int
 
 	// Set new graph
