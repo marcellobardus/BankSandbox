@@ -10,7 +10,16 @@ import (
 )
 
 func main() {
+	go daemons.HelloWorld()
+	go setDatabaseConnection()
+	startRest()
+}
+
+func setDatabaseConnection() {
 	database.SetConnection("localhost", "banksandboxdb")
+}
+
+func startRest() {
 	router := controllers.NewAppController()
 	fmt.Println("Listening on port 8087")
 	err := http.ListenAndServe(":8087", router)

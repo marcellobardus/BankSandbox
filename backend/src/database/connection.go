@@ -19,6 +19,8 @@ const (
 	AccountsCollection = "accounts"
 	// TransactionsCollection cointains the name of transaction collection name in mongoDB
 	TransactionsCollection = "transaction"
+	// GraphsCollecion
+	GraphsCollecion = "graphs"
 )
 
 // Database allows to interact with the mongo collections

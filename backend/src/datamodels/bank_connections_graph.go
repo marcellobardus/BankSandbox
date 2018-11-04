@@ -33,14 +33,16 @@ const (
 )
 
 type BankConnectionsGraph struct {
+	ID        uint32                 `bson:""id json:"id"`
 	BanksBICs []string               `bson:"banks" json:"banks"`
 	Routes    []*BankConnectionRoute `bson:"routes" json:"routes"`
 }
 
-func NewBankConnectionsGraph() *BankConnectionsGraph {
+func NewBankConnectionsGraph(id uint32) *BankConnectionsGraph {
 	graph := new(BankConnectionsGraph)
 	graph.BanksBICs = make([]string, 0)
 	graph.Routes = make([]*BankConnectionRoute, 0)
+	graph.ID = id
 	return graph
 }
 

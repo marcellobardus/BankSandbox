@@ -38,7 +38,13 @@ func createBank(w http.ResponseWriter, req *http.Request) {
 		ownersProfiles = append(ownersProfiles, &ownerProfile)
 	}
 
-	bank := datamodels.NewBank(createBankDto.Name, createBankDto.CountryCode, createBankDto.BIC, privateKey, ownersProfiles)
+	bank := datamodels.NewBank(
+		createBankDto.Name,
+		createBankDto.CountryCode,
+		createBankDto.BIC,
+		privateKey,
+		ownersProfiles,
+		0)
 
 	if err := database.DbConnection.InsertBank(bank); err != nil {
 		code := 302
