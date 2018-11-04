@@ -6,11 +6,12 @@ import (
 	"net/http"
 
 	"github.com/spaghettiCoderIT/BankSandbox/backend/src/controllers"
+	"github.com/spaghettiCoderIT/BankSandbox/backend/src/daemons"
 	"github.com/spaghettiCoderIT/BankSandbox/backend/src/database"
 )
 
 func main() {
-	go daemons.HelloWorld()
+	go daemons.TransactionsDaemon()
 	go setDatabaseConnection()
 	startRest()
 }
