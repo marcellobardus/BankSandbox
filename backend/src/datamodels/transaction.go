@@ -1,6 +1,7 @@
 package datamodels
 
 import (
+	"errors"
 	"log"
 	"time"
 )
@@ -35,7 +36,7 @@ type Transaction struct {
 
 	Status TransactionStatus `bson:"transactionstatus" json:"transactionstatus"`
 
-	Path []string `bson:"path" json:"path"`
+	Path []*Bank `bson:"path" json:"path"`
 
 	OnNetworkID uint32 `bson:"onNetworkID" json:"onNetworkID"`
 }
@@ -62,18 +63,80 @@ func (transaction *Transaction) SetPath(network *BankConnectionsGraph) {
 }
 
 // TODO
-func (transaction *Transaction) Send() {
+func (transaction *Transaction) Send() error {
+	var senderWalletID, recipientWalletID int
+	// Check if recipient has a wallet which matches the transaction's currency
+	ok := false
+	for i := 0; i < len(transaction.Recipient.Wallets); i++ {
+		if transaction.TransactionCurrency == transaction.Recipient.Wallets[i].Currency {
+			ok = true
+			recipientWalletID = i
+		}
+	}
 
+	if !ok {
+		errors.New("The transaction's recipient has not a wallet with the correct currency")
+	}
+
+	// Check if sender has a wallet which matches the transaction's currency
+	ok = false
+	for i := 0; i < len(transaction.Sender.Wallets); i++ {
+		if transaction.TransactionCurrency == transaction.Sender.Wallets[i].Currency {
+			ok = true
+			senderWalletID = i
+		}
+	}
+
+	if !ok {
+		errors.New("The transaction's sender has not a wallet with the correct currency")
+	}
+	// Check if sender can send the transaction
+	if transaction.Amount > transaction.Sender.Wallets[senderWalletID].Balance {
+		return errors.New("Transaction's sender hasn't enough balance")
+	}
+
+	// Decrease sender's balance
+	transaction.Sender.Wallets[senderWalletID].DecreaseBalance(transaction.Amount)
+
+	// Increase recipient's incoming transfers balance
+	transaction.Recipient.Wallets[recipientWalletID].IncreaseIncomingBalance(transaction.Amount)
+
+	// Set time of coming
+
+	// Check if path is defined
+
+	if len(transaction.Path) == 0 || transaction.Path == nil {
+		return errors.New("Transaction path is undefined")
+	}
+
+	// TODO set the time in base of the connections in the path
+
+	var transactionDuration int64
+
+	for i := 0; i < len(transaction.Path); i++ {
+		for j := 0; i < len(transaction.Path[i].Connections); j++ {
+			if transaction.Path[i].Connections[j].ConnectedBIC == transaction.Path[i].BIC {
+				transactionDuration += int64(transaction.Path[i].Connections[j].TransferTime)
+			}
+		}
+	}
+
+	transaction.TimeOfComing = time.Now().Add(time.Duration(transactionDuration) * time.Minute)
+
+	return nil
 }
 
+// TODO
 func (transaction *Transaction) Froze() {
 
 }
 
+// TODO
 func (transaction *Transaction) Unfroze() {
 
 }
 
+// TODO
 func (transaction *Transaction) Realise() {
 
 }

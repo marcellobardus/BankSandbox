@@ -8,9 +8,10 @@ import (
 )
 
 type Wallet struct {
-	Currency string `bson:"currency" json:"currency"`
-	Balance  int64  `bson:"balance" json:"balance"`
-	IBAN     string `bson:"IBAN" json:"IBAN"`
+	Currency        string `bson:"currency" json:"currency"`
+	Balance         int64  `bson:"balance" json:"balance"`
+	IncomingBalance int64  `bson:"incomingBalance" json:"incomingBalance"`
+	IBAN            string `bson:"IBAN" json:"IBAN"`
 }
 
 func NewWallet(currency string, balance int64) *Wallet {
@@ -43,5 +44,23 @@ func (wallet *Wallet) DecreaseBalance(balance int64) error {
 		return errors.New("Balance cannot be less than 0 or be equal to 0")
 	}
 	wallet.Balance -= balance
+	return nil
+}
+
+func (wallet *Wallet) IncreaseIncomingBalance(balance int64) error {
+	if balance <= 0 {
+		return errors.New("Balance cannot be less than 0 or be equal to 0")
+	}
+
+	wallet.IncomingBalance += balance
+	return nil
+}
+
+func (wallet *Wallet) DecreaseIncomingBalance(balance int64) error {
+	if balance <= 0 {
+		return errors.New("Balance cannot be less than 0 or be equal to 0")
+	}
+
+	wallet.IncomingBalance -= balance
 	return nil
 }
