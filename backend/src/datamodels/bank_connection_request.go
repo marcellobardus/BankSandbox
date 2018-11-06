@@ -23,6 +23,7 @@ type BankConnectionRequest struct {
 
 	TransferTime     time.Duration `json:"transferTime" bson:"transferTime"`
 	TransferTimeUnit interface{}   `json:"transferTimeUnit" bson:"transferTimeUnit"`
+	TransferFee      uint8         `json:"transferFee" bson:"transferFee"`
 
 	Status BankConnectionRequestStatus `json:"status" bson:"status"`
 }

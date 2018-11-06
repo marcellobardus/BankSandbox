@@ -32,3 +32,8 @@ func (connection *Connection) GetGraphByID(id uint32) (*datamodels.BankConnectio
 	err := database.C(GraphsCollecion).Find(bson.M{"id": id}).One(&graph)
 	return graph, err
 }
+
+// TODO
+func (connection *Connection) UpdateGraph(graph *datamodels.BankConnectionsGraph) error {
+	return nil
+}

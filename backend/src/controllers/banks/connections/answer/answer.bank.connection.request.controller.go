@@ -78,7 +78,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	for i := 0; i < len(bank.IncomingConnectionRequests); i++ {
 		if answerBankConnectionRequestDto.SenderBIC == bank.IncomingConnectionRequests[i].Sender {
-			connection = datamodels.NewBankConnection(bank.BIC, bank.IncomingConnectionRequests[i].TransferTime, bank.IncomingConnectionRequests[i].TransferTimeUnit)
+			connection = datamodels.NewBankConnection(bank.BIC, bank.IncomingConnectionRequests[i].TransferTime, bank.IncomingConnectionRequests[i].TransferTimeUnit, bank.IncomingConnectionRequests[i].TransferFee)
 			isBankAuthorizedToAcceptRequest = true
 			break
 		}
@@ -143,6 +143,13 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if !answerBankConnectionRequestDto.Accept {
+		res := NewAnswerBankConnectionRequestDrt(false, nil, answerBankConnectionRequestDto.Accept)
+		resJSON, _ := json.Marshal(res)
+		w.Write(resJSON)
+		return
+	}
+
 	senderBank.Connections = append(senderBank.Connections, connection)
 
 	err = database.DbConnection.UpdateBankByBIC(senderBank.BIC, senderBank)
@@ -154,6 +161,29 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 		w.Write(resJSON)
 		return
 	}
+
+	graph, err := database.DbConnection.GetGraphByID(0)
+
+	if err != nil {
+		code := 513
+		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		resJSON, _ := json.Marshal(res)
+		w.Write(resJSON)
+		return
+	}
+
+	routeDuration := senderBank.Connections[len(senderBank.Connections)-1].TransferTime
+	routeFee := senderBank.Connections[len(senderBank.Connections)-1].TransferFee
+	route := datamodels.NewBankConnectionRoute(senderBank.BIC, bank.BIC, uint8(routeFee), routeDuration)
+	if err := graph.CreateNewRoute(route); err != nil {
+		code := 514
+		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		resJSON, _ := json.Marshal(res)
+		w.Write(resJSON)
+		return
+	}
+	// TODO
+	database.DbConnection.UpdateGraph(graph)
 
 	res := NewAnswerBankConnectionRequestDrt(false, nil, answerBankConnectionRequestDto.Accept)
 	resJSON, _ := json.Marshal(res)

@@ -68,11 +68,11 @@ func (recipient *Bank) DeleteDeliveredConnectionRequest(sender string) error {
 	return errors.New("Wrong sender argument")
 }
 
-func (recipient *Bank) AcceptConnectionRequest(sender string, transferTime uint32, timeUnit interface{}) error {
+func (recipient *Bank) AcceptConnectionRequest(sender string, transferTime uint32, timeUnit interface{}, transferFee int64) error {
 	for i := 0; i < len(recipient.IncomingConnectionRequests); i++ {
 		if recipient.IncomingConnectionRequests[i].Sender == sender {
 			recipient.IncomingConnectionRequests[i].Accept()
-			newConnection := NewBankConnection(sender, time.Duration(transferTime), timeUnit)
+			newConnection := NewBankConnection(sender, time.Duration(transferTime), timeUnit, transferFee)
 			recipient.Connections = append(recipient.Connections, newConnection)
 
 			// Delete request

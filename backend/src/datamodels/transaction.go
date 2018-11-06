@@ -109,8 +109,6 @@ func (transaction *Transaction) Send() error {
 		return errors.New("Transaction path is undefined")
 	}
 
-	// TODO set the time in base of the connections in the path
-
 	var transactionDuration int64
 
 	for i := 0; i < len(transaction.Path); i++ {
