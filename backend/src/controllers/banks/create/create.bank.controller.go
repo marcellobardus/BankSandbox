@@ -47,7 +47,7 @@ func createBank(w http.ResponseWriter, req *http.Request) {
 		0)
 
 	if err := database.DbConnection.InsertBank(bank); err != nil {
-		code := 302
+		code := 302 // Bank already exists
 		res := newCreateBankDrt(true, &code, nil, nil)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
@@ -71,6 +71,14 @@ func createBank(w http.ResponseWriter, req *http.Request) {
 	}
 
 	graph.PushNewBank(bank)
+
+	if err := database.DbConnection.UpdateGraph(graph); err != nil {
+		code := 304
+		res := newCreateBankDrt(true, &code, nil, nil)
+		resJSON, _ := json.Marshal(res)
+		w.Write(resJSON)
+		return
+	}
 
 	message := "Because of security reasons the private key will not be delivired over the http/https protocol, please contact us"
 	res := newCreateBankDrt(false, nil, &message, &ownersProfilesSecrets)

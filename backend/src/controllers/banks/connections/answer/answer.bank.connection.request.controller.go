@@ -24,7 +24,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		code := 501
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		log.Println(err)
@@ -33,7 +33,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	if bank.PrivateKey != privateKey {
 		code := 502
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
@@ -43,7 +43,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	if err := json.NewDecoder(req.Body).Decode(&answerBankConnectionRequestDto); err != nil {
 		code := 503
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
@@ -51,7 +51,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	if len(bank.OwnersProfiles) != len(answerBankConnectionRequestDto.OTPs) {
 		code := 504
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
@@ -66,7 +66,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 		}
 		if !auth {
 			code := 505
-			res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+			res := newAnswerBankConnectionRequestDrt(true, &code, false)
 			resJSON, _ := json.Marshal(res)
 			w.Write(resJSON)
 			return
@@ -78,7 +78,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	for i := 0; i < len(bank.IncomingConnectionRequests); i++ {
 		if answerBankConnectionRequestDto.SenderBIC == bank.IncomingConnectionRequests[i].Sender {
-			connection = datamodels.NewBankConnection(bank.BIC, bank.IncomingConnectionRequests[i].TransferTime, bank.IncomingConnectionRequests[i].TransferTimeUnit, bank.IncomingConnectionRequests[i].TransferFee)
+			connection = datamodels.NewBankConnection(bank.BIC, bank.IncomingConnectionRequests[i].TransferTime, bank.IncomingConnectionRequests[i].TransferTimeUnit, int64(bank.IncomingConnectionRequests[i].TransferFee))
 			isBankAuthorizedToAcceptRequest = true
 			break
 		}
@@ -86,7 +86,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	if !isBankAuthorizedToAcceptRequest {
 		code := 506
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
@@ -98,16 +98,16 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		code := 507
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
 	}
 	if answerBankConnectionRequestDto.Accept {
-		err := bank.AcceptConnectionRequest(senderBank.BIC, uint32(connection.TransferTime), connection.TransferTimeUnit)
+		err := bank.AcceptConnectionRequest(senderBank.BIC, uint32(connection.TransferTime), connection.TransferTimeUnit, connection.TransferFee)
 		if err != nil {
 			code := 508
-			res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+			res := newAnswerBankConnectionRequestDrt(true, &code, false)
 			resJSON, _ := json.Marshal(res)
 			w.Write(resJSON)
 			return
@@ -116,7 +116,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 		err := bank.RefuseConnectionRequest(senderBank.BIC)
 		if err != nil {
 			code := 508
-			res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+			res := newAnswerBankConnectionRequestDrt(true, &code, false)
 			resJSON, _ := json.Marshal(res)
 			w.Write(resJSON)
 			return
@@ -127,7 +127,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		code := 510
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
@@ -137,14 +137,14 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		code := 511
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
 	}
 
 	if !answerBankConnectionRequestDto.Accept {
-		res := NewAnswerBankConnectionRequestDrt(false, nil, answerBankConnectionRequestDto.Accept)
+		res := newAnswerBankConnectionRequestDrt(false, nil, answerBankConnectionRequestDto.Accept)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
@@ -156,7 +156,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		code := 512
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
@@ -166,7 +166,7 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		code := 513
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
@@ -177,15 +177,21 @@ func answerBankConnectionRequest(w http.ResponseWriter, req *http.Request) {
 	route := datamodels.NewBankConnectionRoute(senderBank.BIC, bank.BIC, uint8(routeFee), routeDuration)
 	if err := graph.CreateNewRoute(route); err != nil {
 		code := 514
-		res := NewAnswerBankConnectionRequestDrt(true, &code, false)
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
 		resJSON, _ := json.Marshal(res)
 		w.Write(resJSON)
 		return
 	}
-	// TODO
-	database.DbConnection.UpdateGraph(graph)
 
-	res := NewAnswerBankConnectionRequestDrt(false, nil, answerBankConnectionRequestDto.Accept)
+	if err := database.DbConnection.UpdateGraph(graph); err != nil {
+		code := 515
+		res := newAnswerBankConnectionRequestDrt(true, &code, false)
+		resJSON, _ := json.Marshal(res)
+		w.Write(resJSON)
+		return
+	}
+
+	res := newAnswerBankConnectionRequestDrt(false, nil, answerBankConnectionRequestDto.Accept)
 	resJSON, _ := json.Marshal(res)
 	w.Write(resJSON)
 	return

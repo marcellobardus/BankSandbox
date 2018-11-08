@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
+	setDatabaseConnection()
 	go daemons.TransactionsDaemon()
-	go setDatabaseConnection()
 	startRest()
 }
 

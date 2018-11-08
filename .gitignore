@@ -1,3 +1,7 @@
 # Banks connections graph visualisations
 
 *.png
+
+#Certificates 
+
+*.pem

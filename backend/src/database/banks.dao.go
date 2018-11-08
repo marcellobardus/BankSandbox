@@ -46,5 +46,3 @@ func (connection *Connection) UpdateBankByBIC(bic string, bank *datamodels.Bank)
 	err := database.C(BanksCollection).Update(bson.M{"bic": bic}, bank)
 	return err
 }
-
-// TODO update bank

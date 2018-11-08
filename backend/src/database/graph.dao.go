@@ -33,7 +33,7 @@ func (connection *Connection) GetGraphByID(id uint32) (*datamodels.BankConnectio
 	return graph, err
 }
 
-// TODO
 func (connection *Connection) UpdateGraph(graph *datamodels.BankConnectionsGraph) error {
-	return nil
+	err := database.C(GraphsCollecion).Update(bson.M{"id": graph.ID}, graph)
+	return err
 }

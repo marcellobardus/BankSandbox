@@ -6,7 +6,7 @@ type AnswerBankConnectionRequestDrt struct {
 	Accepted  bool `json:"accepted`
 }
 
-func NewAnswerBankConnectionRequestDrt(err bool, errorCode *int, accepted bool) *AnswerBankConnectionRequestDrt {
+func newAnswerBankConnectionRequestDrt(err bool, errorCode *int, accepted bool) *AnswerBankConnectionRequestDrt {
 	drt := new(AnswerBankConnectionRequestDrt)
 	drt.Error = err
 	drt.Accepted = accepted
