@@ -4,26 +4,31 @@ import (
 	"errors"
 	"log"
 	"time"
+
+	"github.com/spaghettiCoderIT/BankSandbox/backend/src/utils"
 )
 
-type TransactionStatus int8
+type TransactionStatus string
 
 const (
 	// Unconfirmed transaction cannot be send bcause its fee is undefined
-	Unconfirmed TransactionStatus = 0
+	Unconfirmed TransactionStatus = "unconfirmed"
 	// Sent => Transction is waiting for the nearest session
-	Sent TransactionStatus = 1
+	Sent TransactionStatus = "sent"
 	// Realised => Sender and Recipient wallets balances are updated
-	Realised TransactionStatus = 2
+	Realised TransactionStatus = "realised"
 	// Cancelled => Transaction is cancelled
-	Cancelled TransactionStatus = 3
+	Cancelled TransactionStatus = "cancelled"
 	// Frozen => Transaction is frozen
-	Frozen TransactionStatus = 4
+	Frozen TransactionStatus = "frozen"
 )
 
 type Transaction struct {
 	Sender    *Account `bson:"sender" json:"sender"`
 	Recipient *Account `bson:"recipient" json:"recipient"`
+
+	SenderIBAN    string `bson:"senderIBAN" json:"senderIBAN"`
+	RecipientIBAN string `bson:"recipientIBAN" json:"recipientIBAN"`
 
 	TimeOfLeaving       time.Time `bson:"timeofleaving" json:"timeofleaving"`
 	TimeOfComing        time.Time `bson:"timeofcoming" json:"timeofcoming"`
@@ -41,7 +46,6 @@ type Transaction struct {
 	OnNetworkID uint32 `bson:"onNetworkID" json:"onNetworkID"`
 }
 
-// TODO
 func NewTransaction(sender *Account, recipient *Account, amount int64, currency string, fee int64, onNetworkID uint32) *Transaction {
 	transaction := new(Transaction)
 	transaction.Sender = sender
@@ -54,6 +58,29 @@ func NewTransaction(sender *Account, recipient *Account, amount int64, currency 
 	return transaction
 }
 
+func (transaction *Transaction) SetIBANs() error {
+	// Set the sender's IBAN
+	for i := 0; i < len(transaction.Sender.Wallets); i++ {
+		if transaction.Sender.Wallets[i].Currency == transaction.TransactionCurrency {
+			transaction.SenderIBAN = transaction.Sender.Wallets[i].IBAN
+		}
+	}
+	if transaction.SenderIBAN == "" {
+		return errors.New("Could not find the sender's wallet which corresponds to the transaction currency")
+	}
+
+	// Set recipient's IBAN
+	for i := 0; i < len(transaction.Recipient.Wallets); i++ {
+		if transaction.Recipient.Wallets[i].Currency == transaction.TransactionCurrency {
+			transaction.RecipientIBAN = transaction.Recipient.Wallets[i].IBAN
+		}
+	}
+	if transaction.RecipientIBAN == "" {
+		return errors.New("Could not find the recipient's wallet which corresponds to the transaction currency")
+	}
+	return nil
+}
+
 func (transaction *Transaction) SetPath(network *BankConnectionsGraph) {
 	route, err := network.FindRoute(transaction.Sender.MaintingBankBIC, transaction.Recipient.MaintingBankBIC)
 	if err != nil {
@@ -62,7 +89,31 @@ func (transaction *Transaction) SetPath(network *BankConnectionsGraph) {
 	transaction.Path = route
 }
 
-// TODO
+func (transaction *Transaction) SetHash() error {
+	randomSha256 := utils.NewRandomSha256()
+	// check if sender and reicpient IBANs are set
+
+	if transaction.SenderIBAN == "" {
+		return errors.New("Transaction sender's IBAN has not been set")
+	}
+
+	if transaction.RecipientIBAN == "" {
+		return errors.New("Transaction recipient's IBAN has not been set")
+	}
+
+	meta := utils.ConcatenateStrings(
+		string(transaction.TimeOfLeaving.Unix()),
+		string(transaction.Amount),
+		transaction.SenderIBAN,
+		transaction.RecipientIBAN,
+		randomSha256)
+
+	transaction.TransactionHash = meta
+
+	return nil
+}
+
+// TODO setting time of coming
 func (transaction *Transaction) Send() error {
 	var senderWalletID, recipientWalletID int
 	// Check if recipient has a wallet which matches the transaction's currency
@@ -75,7 +126,7 @@ func (transaction *Transaction) Send() error {
 	}
 
 	if !ok {
-		errors.New("The transaction's recipient has not a wallet with the correct currency")
+		return errors.New("The transaction's recipient has not a wallet with the correct currency")
 	}
 
 	// Check if sender has a wallet which matches the transaction's currency
@@ -88,7 +139,7 @@ func (transaction *Transaction) Send() error {
 	}
 
 	if !ok {
-		errors.New("The transaction's sender has not a wallet with the correct currency")
+		return errors.New("The transaction's sender has not a wallet with the correct currency")
 	}
 	// Check if sender can send the transaction
 	if transaction.Amount > transaction.Sender.Wallets[senderWalletID].Balance {
@@ -134,7 +185,35 @@ func (transaction *Transaction) Unfroze() {
 
 }
 
-// TODO
-func (transaction *Transaction) Realise() {
+func (transaction *Transaction) Realise() error {
+	// When a time struct.Unix() returns a value < 0 it means that the date is still undefined
+	if transaction.TimeOfComing.Unix() < 0 {
+		return errors.New("Cannot realise an unsent transaction")
+	}
 
+	// Check if transaction can be realised
+	if time.Now().Unix() < transaction.TimeOfComing.Unix() {
+		return errors.New("It's to early to realise this transaction")
+	}
+
+	// Check if recipient has a wallet which matches the transaction's currency
+	var recipientWalletID int
+	ok := false
+	for i := 0; i < len(transaction.Recipient.Wallets); i++ {
+		if transaction.TransactionCurrency == transaction.Recipient.Wallets[i].Currency {
+			ok = true
+			recipientWalletID = i
+		}
+	}
+	if !ok {
+		return errors.New("The transaction's recipient has not a wallet with the correct currency")
+	}
+
+	transaction.Recipient.Wallets[recipientWalletID].DecreaseIncomingBalance(transaction.Amount)
+	transaction.Recipient.Wallets[recipientWalletID].IncreaseBalance(transaction.Amount)
+
+	transaction.SetHash()
+	transaction.Status = Realised
+
+	return nil
 }

@@ -17,10 +17,12 @@ const (
 	BanksCollection = "banks"
 	// AccountsCollection cointains the name of accounts collection name in mongoDB
 	AccountsCollection = "accounts"
-	// TransactionsCollection cointains the name of transaction collection name in mongoDB
-	TransactionsCollection = "transaction"
-	// GraphsCollecion
-	GraphsCollecion = "graphs"
+	// RealisedTransactionsCollection cointains the name of realised_transactions collection name in mongoDB
+	RealisedTransactionsCollection = "realised_transactions"
+	// UnrealisedTransactionsCollection cointains the name of unrealised_transactions collection name in mongoDB
+	UnrealisedTransactionsCollection = "unrealised_transactions"
+	// GraphsCollection cointains the name of graphs collection name in mongoDB
+	GraphsCollection = "graphs"
 )
 
 // Database allows to interact with the mongo collections
